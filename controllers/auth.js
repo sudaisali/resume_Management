@@ -4,6 +4,7 @@ const {sendEmail} = require('../utils/sendemail')
 const crypto = require('crypto')
 const {Op} = require('sequelize')
 const jwt = require('jsonwebtoken')
+const util = require('util')
 
 
 const createUser = async (req, res) => {
@@ -187,9 +188,74 @@ const verifyUser = async (req, res) => {
   }
 };
 
+const changePassword = async (req,res)=>{
+  
+  const token = req.headers.authorization;
+  const {oldPassword , newPassword , confirmPassword}= req.body;
+
+  if(!oldPassword || !newPassword || !confirmPassword){
+    return sendResponse(res, 400, 'Please Enter Valid Feilds', false);
+  }
+  try {
+  let id = '';
+
+  if (token && token.startsWith('Bearer')) {
+    const tokenValue = token.split(' ')[1];
+    try {
+      const decodeToken = await util.promisify(jwt.verify)(
+        tokenValue,
+        process.env.SECERET_STRING
+      );
+      id = decodeToken.id;
+    } catch (error) {
+      console.error('Error verifying JWT:', error);
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+  }
+
+  if (!id) {
+    return res.status(400).json({ message: 'Sorry, User Does Not Exist' });
+  }
+
+  const user = await User.findOne({
+    where: {
+      userId: id,
+    },
+  });
+  const isPasswordMatch = await user.comparePassword(oldPassword)
+  if(!isPasswordMatch){
+      return sendResponse(res, 400, 'Password Does Not match', false);
+  }
+    user.password = newPassword;
+    user.confirmPassword = confirmPassword;
+
+    await user.save();
+
+
+
+
+  if (!user) {
+    return res.status(404).json({ message: 'Sorry, User Not Found' });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message:'Password Change Success Fully'
+  });
+} catch (error) {
+  console.error('Error in getProfile:', error);
+  return res.status(500).json({ message: 'Internal Server Error' });
+}
+}
+
+
 const sendResponse = (res, statusCode, data, success) => {
     return res.status(statusCode).json({ success, data });
 };
+
+
+
+
 function signToken(newUser) {
     return jwt.sign({
         id: newUser.userId,
@@ -201,4 +267,6 @@ function signToken(newUser) {
 }
 
 
-module.exports = { createUser , setPassword , login , verifyUser};
+
+
+module.exports = { createUser , setPassword , login , verifyUser , changePassword};

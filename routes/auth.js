@@ -8,6 +8,7 @@ authrouter.post('/createuser',auth.authorizeUser,User.createUser)
 authrouter.post('/setpassword',User.setPassword)
 authrouter.post('/login',User.login)
 authrouter.patch('/verifyUser/:userId',User.verifyUser)
+authrouter.patch('/changepassword',User.changePassword)
 
 
 

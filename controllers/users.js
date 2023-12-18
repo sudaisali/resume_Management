@@ -100,8 +100,33 @@ const getProfile = async (req, res) => {
     }
   };
 
+const userProfile = async(req , res)=>{
+    const {userId} = req.params;
+    try {
 
+    if (!userId) {
+      return res.status(400).json({ message: 'Sorry, User Does Not Exist' });
+    }
 
+    const user = await User.findOne({
+      attributes:['userId','firstName','lastName','email','isAdmin','isVerified'],
+      where: {
+        userId,
+      },
+    });
 
+    if (!user) {
+      return res.status(404).json({ message: 'Sorry, User Not Found' });
+    }
 
-module.exports = {getUsers , getProfile}
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error('Error in getProfile:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+}
+
+module.exports = {getUsers , getProfile , userProfile}
