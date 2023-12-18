@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config()
 const { Sequelize } = require('sequelize');
 const cors = require('cors');
+const cron = require('node-cron');
 const sequelize = require('./database');
 const { User } = require('./models/users'); 
 const {Applicant} = require('./models/applicants')
@@ -12,6 +13,7 @@ const {userrouter} = require('./routes/user')
 const {formrouter} = require('./routes/applicants')
 const {logrouter} = require('./routes/log')
 const {logRequestDetails} = require('./middlewares/log')
+const {cronJobFunction} = require('./utils/cronjob')
 
 const app = express();
 app.use(cors());
@@ -34,6 +36,7 @@ const startApplication = async () => {
     }
     app.listen(process.env.PORT, () => {
       console.log('Server is running on port 3000');
+      cron.schedule('*/20 * * * * *', cronJobFunction);
     });
   } catch (error) {
     console.error('Error initializing application:', error);

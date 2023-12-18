@@ -63,13 +63,26 @@ const getAllapplicants = async (req, res) => {
       const search = req.query.search || '';
       const status = req.query.status || '';
       const offset = (page - 1) * limit;
+      // const whereClause = {
+      //     [Op.or]: [
+      //         { username: { [Op.like]: `%${search}%` } },
+      //         { email: { [Op.like]: `%${search}%` } },
+      //     ],
+      //     status: { [Op.like]: `%${status}%` },
+          
+      // };
       const whereClause = {
-          [Op.or]: [
-              { username: { [Op.like]: `%${search}%` } },
-              { email: { [Op.like]: `%${search}%` } },
-          ],
-          status: { [Op.like]: `%${status}%` },
-      };
+        [Op.and]: [
+            {
+                [Op.or]: [
+                    { username: { [Op.like]: `%${search}%` } },
+                    { email: { [Op.like]: `%${search}%` } },
+                ],
+            },
+            { status: { [Op.like]: `%${status}%` } },
+            { isDelete: { [Op.ne]: true } },
+        ],
+    };
       const applicants = await Applicant.findAndCountAll({
           where: whereClause,
           offset,
