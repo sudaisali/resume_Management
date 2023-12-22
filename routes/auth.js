@@ -4,11 +4,12 @@ const auth = require('../middlewares/authorization')
 const authrouter = express.Router()
 
 
-authrouter.post('/createuser',auth.authorizeUser,User.createUser)
-authrouter.post('/setpassword',User.setPassword)
+authrouter.post('/create-user',auth.authorizeUser,User.createUser)
+authrouter.post('/set-password',User.setPassword)
 authrouter.post('/login',User.login)
-authrouter.patch('/verifyUser/:userId',User.verifyUser)
-authrouter.patch('/changepassword',User.changePassword)
+authrouter.patch('/verify-user/:userId',User.verifyUser)
+authrouter.patch('/change-password',User.changePassword)
+authrouter.post('/forget-password',User.resetPassword)
 
 
 

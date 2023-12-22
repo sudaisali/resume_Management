@@ -4,7 +4,7 @@ const auth = require('../middlewares/authorization')
 const logrouter = express.Router()
 
 
-logrouter.get('/getlogs',auth.authorizeUser,auth.checkrole(),getAllLogs)
+logrouter.get('/get-logs',auth.authorizeUser,auth.checkrole(),getAllLogs)
 
 
 

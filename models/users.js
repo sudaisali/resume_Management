@@ -10,20 +10,21 @@ const User = sequelize.define('User', {
     defaultValue: Sequelize.UUIDV4,
     primaryKey: true,
   },
-   firstName: {
+  firstName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-    lastName: {
+  lastName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-   email: {
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
       isEmail: true,
+      is: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     },
   },
   password: {
@@ -61,14 +62,12 @@ const User = sequelize.define('User', {
     tableName: 'users',
     timestamps: true,
   });
-
   const userSchema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).allow(null), 
+      firstName: Joi.string().trim().max(50).required().regex(/^[a-zA-Z][a-zA-Z0-9 ]*$/).message('First Name must be valid'),
+      lastName: Joi.string().trim().max(50).required().regex(/^[a-zA-Z][a-zA-Z0-9 ]*$/).message('Last Name must be valid'),
+      email: Joi.string().required().regex(/^[a-zA-Z][a-zA-Z0-9._%+-]*@gmail+\.[a-zA-Z]{2,}$/).message('Email must be valid'),
+      password: Joi.string().min(8).allow(null), 
   });
-
   User.addHook('beforeValidate', (user, options) => {
     const { error } = userSchema.validate(
       { 
@@ -77,20 +76,19 @@ const User = sequelize.define('User', {
         email: user.email,
         password: user.password !== null ? user.password : undefined,
       },
-      { abortEarly: false }
+      { abortEarly: true }
     );
   
     if (error) {
-      throw new Error(`Validation error: ${error.message}`);
+      throw new Error(error.details.map(detail => detail.message).join(', '));
     }
   });
-
-  
   User.prototype.createRememberToken = function () {
     const buffer = crypto.randomBytes(32);
     const unhashedToken = buffer.toString('hex');  
     this.rememberToken = crypto.createHash('sha256').update(unhashedToken).digest('hex');
-    this.rememberTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
+    // this.rememberTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
+    this.rememberTokenExpiry = Date.now() + 5 * 60 * 1000;
     return unhashedToken; 
   };
 
@@ -101,9 +99,32 @@ const User = sequelize.define('User', {
     }
   });
 
-  User.prototype.comparePassword = async function (userPassword) {
-    return await bcrypt.compare(userPassword, this.password);
-  };
+User.prototype.comparePassword = async function (userPassword) {
+  try {
+      if (!this.password) {
+          return false;
+      }
+      const result = await bcrypt.compare(userPassword, this.password);
+      return result;
+  } catch (error) {
+      console.error("Error comparing passwords:", error);
+      throw new Error("Error comparing passwords");
+  }
+};
+
+User.prototype.isPasswordChanged = function (jwtTimeStamp) {
+  if(this.passwordUpdatedAt){
+    const pswrdUpdateTimeStamp = Math.floor(this.passwordUpdatedAt.getTime() /1000)
+    if(pswrdUpdateTimeStamp > jwtTimeStamp){
+      return true
+    }else{
+      return false
+    }
+     
+  }
+  return false
+};
+
   
   
   

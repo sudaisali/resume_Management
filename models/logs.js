@@ -5,8 +5,13 @@ const Log = sequelize.define('Log', {
     logId: {
         type: DataTypes.UUID,
         allowNull: false,
-        primaryKey: true,
     },
+    logNumber: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
     method: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -46,6 +51,12 @@ const Log = sequelize.define('Log', {
             isEmail: true,
         },
     },
+    activity: {
+        type: DataTypes.STRING,
+        allowNull: true,
+       
+    },
+    
 }, {
     tableName: 'logs',
     timestamps: true, 

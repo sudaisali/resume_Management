@@ -1,17 +1,17 @@
 const cron = require('node-cron');
 const fs = require('fs').promises;
 const path = require('path');
-const {Applicant} = require('../models/applicants');
+const { Applicant } = require('../models/applicants');
 const cronJobFunction = async () => {
   try {
     const rejectedJobs = await Applicant.findAll({
       where: {
         status: 'rejected',
-        isDelete:false
+        isDelete: false
       },
     });
     for (const job of rejectedJobs) {
-        console.log(job)
+      console.log(job)
       try {
         await job.update({ isDelete: true });
         const fileName = job.cv;
@@ -27,10 +27,10 @@ const cronJobFunction = async () => {
       }
     }
     console.log('Rejected Files Deleted.');
-  
+
   } catch (error) {
     console.error('Error executing cron job:', error);
   }
 };
 
-module.exports = {cronJobFunction};
+module.exports = { cronJobFunction };
