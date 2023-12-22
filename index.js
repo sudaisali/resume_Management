@@ -18,11 +18,23 @@ const { cronJobFunction } = require('./utils/cronjob')
 const { gptResponse } = require('./utils/gptresponse')
 const { v4: uuidv4 } = require('uuid');
 const http = require('node:http');
+const { sendFailureResponse } = require('./utils/standaradresponse')
 
 
 
 const app = express();
 app.use(cors());
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(logRequestDetails)
+app.use('/api/auth', authrouter)
+app.use('/api/user', userrouter)
+app.use('/api/applicant', formrouter)
+app.use('/api/log', logrouter)
+app.use('*', (req, res) => {
+  const logId = res.getHeader('logId');
+  return sendFailureResponse(res, 404, 'Sorry Api Does Not Exist', logId);
+});
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -57,20 +69,6 @@ io.on('connection', (socket) => {
     console.log('User disconnected');
   });
 });
-
-
-
-
-
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use(logRequestDetails)
-
-app.use('/api/auth', authrouter)
-app.use('/api/user', userrouter)
-app.use('/api/applicant', formrouter)
-app.use('/api/log', logrouter)
-
 
 const startApplication = async () => {
   try {
